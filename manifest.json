@@ -1,0 +1,16 @@
+{
+  "name": "EARS - Engagement Activity Recording System",
+  "short_name": "EARS",
+  "description": "Record and manage your engagement activities",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f2744",
+  "theme_color": "#0f2744",
+  "icons": [
+    {
+      "src": "assets/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

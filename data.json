@@ -1,0 +1,88 @@
+{
+  "activities": [
+    {
+      "id": 1,
+      "title": "International AI Ethics Conference",
+      "type": "Conference",
+      "org": "IEEE",
+      "date": "2026-03-15",
+      "time": "09:00",
+      "endDate": "2026-03-17",
+      "location": "Sydney, NSW",
+      "hours": 24,
+      "desc": "Presented a paper on responsible AI frameworks in higher education. Attended 12 parallel sessions covering bias, transparency, and governance.",
+      "outcome": "Published conference paper; established 3 new industry contacts for future collaboration.",
+      "createdAt": "2026-03-26T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "title": "Advanced Python for Data Analysis Workshop",
+      "type": "Workshop",
+      "org": "DataCamp",
+      "date": "2026-02-10",
+      "time": "09:00",
+      "endDate": "",
+      "location": "Online",
+      "hours": 8,
+      "desc": "Full-day intensive workshop covering pandas, numpy, and matplotlib for data science applications.",
+      "outcome": "Updated course materials with new Python examples.",
+      "createdAt": "2026-02-10T00:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "title": "Industry Guest Lecture — Siemens Smart Manufacturing",
+      "type": "Guest Lecture",
+      "org": "Siemens",
+      "date": "2026-04-05",
+      "time": "14:00",
+      "endDate": "",
+      "location": "Building B, Room 204",
+      "hours": 3,
+      "desc": "Organised and hosted a guest lecture by Dr Amanda Patel on Industry 4.0 and smart manufacturing for final-year students.",
+      "outcome": "80 students attended; guest agreed to return for mentoring session.",
+      "createdAt": "2026-04-05T00:00:00.000Z"
+    },
+    {
+      "id": 4,
+      "title": "Community STEM Outreach — Balcatta High School",
+      "type": "Community Engagement",
+      "org": "Balcatta SHS",
+      "date": "2026-05-12",
+      "time": "10:00",
+      "endDate": "",
+      "location": "Balcatta Senior High School",
+      "hours": 5,
+      "desc": "Ran a half-day STEM workshop for Year 10 students introducing robotics and engineering problem-solving.",
+      "outcome": "15 students registered interest in university open day.",
+      "createdAt": "2026-05-12T00:00:00.000Z"
+    },
+    {
+      "id": 5,
+      "title": "IoT Security Research Seminar",
+      "type": "Meeting",
+      "org": "CSIRO",
+      "date": "2026-01-20",
+      "time": "11:00",
+      "endDate": "",
+      "location": "Online",
+      "hours": 2,
+      "desc": "Attended seminar on emerging threats in IoT security, covering firmware vulnerabilities and zero-trust architecture.",
+      "outcome": "Identified research gap for grant application.",
+      "createdAt": "2026-01-20T00:00:00.000Z"
+    },
+    {
+      "id": 6,
+      "title": "Scitech Science Festival Volunteering",
+      "type": "Volunteering",
+      "org": "Scitech Perth",
+      "date": "2026-06-08",
+      "time": "09:30",
+      "endDate": "",
+      "location": "Scitech, Perth",
+      "hours": 6,
+      "desc": "Volunteered at the annual science festival running interactive engineering exhibits for school-aged children and families.",
+      "outcome": "Engaged ~200 visitors; promoted university engineering programs.",
+      "createdAt": "2026-06-08T00:00:00.000Z"
+    }
+  ]
+}

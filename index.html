@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EARS">
+<meta name="theme-color" content="#0f2744">
+<meta name="description" content="Engagement Activity Recording System - Record and manage your engagement activities">
+<link rel="manifest" href="manifest.json">
+<title>EARS — Engagement Activity Recording System</title>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="tc" id="toasts"></div>
+<div class="mob-overlay" id="mob-overlay" onclick="toggleMobileMenu()"></div>
+
+<div id="app">
+  <!-- MOBILE MENU TOGGLE -->
+  <button class="mob-menu-btn" id="mob-menu-btn" onclick="toggleMobileMenu()">
+    <span></span><span></span><span></span>
+  </button>
+  
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <div class="logo-mark"><img src="assets/logo.svg" alt="EARS logo" style="width:100%;height:100%;border-radius:12px;"/></div>
+      <div><div class="logo-name">EARS</div><div class="logo-sub">Engagement Activity Recording System</div></div>
+    </div>
+    <div style="padding:0 18px 10px">
+      <button id="login-btn" class="btn btn-s btn-sm" style="width:100%;margin-bottom:10px" onclick="openLoginModal()">Login</button>
+      <button class="btn btn-g btn-sm" style="width:100%" onclick="showUpcomingMeetings()">Upcoming Meetings</button>
+    </div>
+    <div class="sb-nav">
+      <div class="nav-lbl">Overview</div>
+      <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')">
+        <svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" id="nav-timeline" onclick="showPage('timeline')">
+        <svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><circle cx="12" cy="12" r="4"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+        Timeline View
+      </div>
+      <div class="nav-lbl">Activities</div>
+      <div class="nav-item" id="nav-activities" onclick="showPage('activities')">
+        <svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        All Activities
+      </div>
+      <div class="nav-item" id="nav-add" onclick="openAdd()">
+        <svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Record Activity
+      </div>
+      <div class="nav-lbl">Output</div>
+      <div class="nav-item" id="nav-reports" onclick="showPage('reports')">
+        <svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+        Reports
+      </div>
+      <div class="nav-lbl">Account</div>
+      <div class="nav-item" id="nav-profile" onclick="showPage('profile')">
+        <svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+        Profile
+      </div>
+      <div class="nav-item hidden" id="nav-admin" onclick="showPage('admin')">
+        <svg class="ni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 4 5 1-3 4 .5 5-5.5-2.5L6.5 16 7 11 4 7l5-1 3-4z"/></svg>
+        Admin Panel
+      </div>
+    </div>
+  </nav>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard">
+      <div class="ph">
+        <div><div class="pt" id="dash-greet">Dashboard</div><div class="ps">What’s for today?</div></div>
+        <button class="btn btn-p" onclick="openAdd()">+ Record Activity</button>
+      </div>
+      <div class="pb">
+        <div class="sg">
+          <div class="sc"><div class="sl">Total Activities</div><div class="sv" id="s-total">0</div><div class="ss">All time</div><div class="si" style="background:var(--blue-muted)">📋</div></div>
+          <div class="sc"><div class="sl">Total Hours</div><div class="sv" id="s-hours">0</div><div class="ss">Engagement hours</div><div class="si" style="background:var(--teal-light)">⏱️</div></div>
+          <div class="sc"><div class="sl">This Year</div><div class="sv" id="s-year">0</div><div class="ss" id="s-year-l">Activities in 2026</div><div class="si" style="background:var(--green-light)">📅</div></div>
+          <div class="sc"><div class="sl">Organisations</div><div class="sv" id="s-orgs">0</div><div class="ss">Unique organisations</div><div class="si" style="background:var(--amber-light)">🏢</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:22px">
+          <div class="card"><div style="font-size:14px;font-weight:600;color:var(--g800);margin-bottom:16px">By Activity Type</div><div id="type-chart"></div></div>
+          <div class="card"><div style="font-size:14px;font-weight:600;color:var(--g800);margin-bottom:16px">Recent Activity</div><div id="dash-recent"></div></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="font-size:14px;font-weight:600;color:var(--g800)">Latest 5 Activities</div>
+            <button class="btn btn-g btn-sm" onclick="showPage('activities')">View All →</button>
+          </div>
+          <div class="tw"><table>
+            <thead><tr><th>Title</th><th>Type</th><th>Date &amp; Time</th><th>Organisation</th><th>Hours</th></tr></thead>
+            <tbody id="dash-table"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITIES -->
+    <div id="page-activities" class="hidden">
+      <div class="ph">
+        <div><div class="pt">All Activities</div><div class="ps">Search, sort, and manage your engagement records</div></div>
+        <button class="btn btn-p" onclick="openAdd()">+ Record Activity</button>
+      </div>
+      <div class="pb">
+        <div class="sb">
+          <div class="siw" style="flex:2;min-width:200px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g400)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" class="fi sp" id="act-search" placeholder="Search title, description, organisation…" oninput="renderActivities()">
+          </div>
+          <select class="flt" id="act-ftype" onchange="renderActivities()">
+            <option value="">All Types</option>
+            <option>Conference</option><option>Guest Lecture</option><option>Meeting</option>
+            <option>Community Engagement</option><option>Workshop</option>
+            <option>Industry Collaboration</option><option>Volunteering</option><option>Other</option>
+          </select>
+          <select class="flt" id="act-fyear" onchange="renderActivities()"><option value="">All Years</option></select>
+          <select class="flt" id="act-ffrom" onchange="renderActivities()"><option value="">From Month</option></select>
+          <select class="flt" id="act-fsort" onchange="renderActivities()">
+            <option value="date-desc">Date ↓ (newest)</option>
+            <option value="date-asc">Date ↑ (oldest)</option>
+            <option value="type-asc">Type A–Z</option>
+            <option value="org-asc">Organisation A–Z</option>
+          </select>
+            <button class="btn btn-g btn-sm" id="act-upcoming" onclick="toggleUpcoming()">Upcoming Only</button>
+            <button class="btn btn-g btn-sm" onclick="clearActFilters()">Clear</button>
+        </div>
+        <div class="card" style="padding:0">
+          <div class="tw"><table>
+            <thead><tr><th>Title</th><th>Type</th><th>Date &amp; Time</th><th>Organisation</th><th>Location</th><th>Hours</th><th>Actions</th></tr></thead>
+            <tbody id="act-tbody"></tbody>
+          </table></div>
+          <div id="act-empty" class="es hidden">
+            <div class="ei">📋</div><div class="etitle">No activities found</div>
+            <div class="edesc">Adjust filters or record a new activity.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div id="page-timeline" class="hidden">
+      <div class="ph">
+        <div><div class="pt">Timeline View</div><div class="ps">Activities arranged chronologically</div></div>
+        <div style="display:flex;gap:10px">
+          <select class="flt" id="tl-fyear" onchange="renderTimeline()"><option value="">All Years</option></select>
+          <select class="flt" id="tl-ftype" onchange="renderTimeline()">
+            <option value="">All Types</option>
+            <option>Conference</option><option>Guest Lecture</option><option>Meeting</option>
+            <option>Community Engagement</option><option>Workshop</option>
+            <option>Industry Collaboration</option><option>Volunteering</option><option>Other</option>
+          </select>
+          <button class="btn btn-p" onclick="openAdd()">+ Record Activity</button>
+        </div>
+      </div>
+      <div class="pb"><div id="tl-container"></div></div>
+    </div>
+
+    <!-- REPORTS -->
+    <div id="page-reports" class="hidden">
+      <div class="ph">
+        <div><div class="pt">Reports</div><div class="ps">Generate a downloadable summary of your engagement activities</div></div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-p no-print" onclick="window.print()">⬇ Download / Print PDF</button>
+        </div>
+      </div>
+      <div class="pb">
+        <div style="display:grid;grid-template-columns:260px 1fr;gap:22px">
+          <div class="no-print">
+            <div class="card">
+              <div style="font-size:13px;font-weight:600;margin-bottom:14px">Report Filters</div>
+              <div class="fg"><label class="fl">Year</label>
+                <select class="fsel" id="rpt-year" onchange="renderReport()"><option value="">All Years</option></select></div>
+              <div class="fg"><label class="fl">Activity Type</label>
+                <select class="fsel" id="rpt-type" onchange="renderReport()">
+                  <option value="">All Types</option>
+                  <option>Conference</option><option>Guest Lecture</option><option>Meeting</option>
+                  <option>Community Engagement</option><option>Workshop</option>
+                  <option>Industry Collaboration</option><option>Volunteering</option><option>Other</option>
+                </select></div>
+              <div class="fg"><label class="fl">Date From</label>
+                <input type="date" class="fi" id="rpt-from" oninput="renderReport()"></div>
+              <div class="fg"><label class="fl">Date To</label>
+                <input type="date" class="fi" id="rpt-to" oninput="renderReport()"></div>
+              <button class="btn btn-p btn-fw" onclick="renderReport()">Generate Report</button>
+            </div>
+          </div>
+          <div id="rpt-output"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="page-profile" class="hidden">
+      <div class="ph">
+        <div><div class="pt">Profile & Sync Settings</div><div class="ps">Manage your account details, password, and data synchronization</div></div>
+      </div>
+      <div class="pb">
+        <!-- Profile Section -->
+        <div class="card" style="max-width:720px;margin-bottom:28px">
+          <div style="font-size:14px;font-weight:600;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--g200)">Profile Information</div>
+          <div class="fgrid">
+            <div class="fg"><label class="fl">Full Name</label><input type="text" class="fi" id="profile-name"></div>
+            <div class="fg"><label class="fl">Email</label><input type="email" class="fi" id="profile-email" disabled></div>
+            <div class="fg"><label class="fl">Department</label><input type="text" class="fi" id="profile-department"></div>
+            <div class="fg"><label class="fl">Job Title</label><input type="text" class="fi" id="profile-job"></div>
+            <div class="fg"><label class="fl">Current Password</label><input type="password" class="fi" id="profile-current-password"></div>
+            <div class="fg"><label class="fl">New Password</label><input type="password" class="fi" id="profile-new-password"></div>
+          </div>
+          <div class="mf" style="padding:18px 0 0;border-top:none;position:static;background:transparent;justify-content:flex-start">
+            <button class="btn btn-p" onclick="saveProfile()">Save Profile</button>
+          </div>
+        </div>
+        
+        <!-- Sync Settings Section -->
+        <div id="profile-sync-settings"></div>
+      </div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="page-admin" class="hidden">
+      <div class="ph">
+        <div><div class="pt">Admin Panel</div><div class="ps">Manage users, review activities, and inspect audit history</div></div>
+      </div>
+      <div class="pb">
+        <div class="tabs">
+          <button class="tab-btn" data-admin-tab="users" onclick="showAdminTab('users')">User Management</button>
+          <button class="tab-btn" data-admin-tab="activities" onclick="showAdminTab('activities')">All Activities</button>
+          <button class="tab-btn" data-admin-tab="audit" onclick="showAdminTab('audit')">Audit Log</button>
+        </div>
+        <div id="admin-users" class="admin-tab-panel"></div>
+        <div id="admin-activities" class="admin-tab-panel hidden"></div>
+        <div id="admin-audit" class="admin-tab-panel hidden"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="mo hidden" id="modal-act">
+  <div class="modal modal-lg">
+    <div class="mh"><div class="mt" id="modal-title">Record New Activity</div><button class="mc" onclick="closeM('modal-act')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="edit-id">
+      <div class="fgrid">
+        <div class="fg s2"><label class="fl">Activity Title *</label>
+          <input type="text" class="fi" id="f-title" placeholder="e.g. International AI Ethics Conference 2026">
+          <div class="fe" id="e-title">Title is required</div></div>
+        <div class="fg"><label class="fl">Activity Type *</label>
+          <select class="fsel" id="f-type">
+            <option value="">Select type…</option>
+            <option>Conference</option><option>Guest Lecture</option><option>Meeting</option>
+            <option>Community Engagement</option><option>Workshop</option>
+            <option>Industry Collaboration</option><option>Volunteering</option><option>Other</option>
+          </select>
+          <div class="fe" id="e-type">Type is required</div></div>
+        <div class="fg"><label class="fl">Organisation Involved</label>
+          <input type="text" class="fi" id="f-org" placeholder="e.g. IEEE, Siemens, City of Perth"></div>
+        <div class="fg"><label class="fl">Date *</label>
+          <input type="date" class="fi" id="f-date">
+          <div class="fe" id="e-date">Date is required</div></div>
+        <div class="fg"><label class="fl">Time</label>
+          <input type="time" class="fi" id="f-time"></div>
+        <div class="fg"><label class="fl">End Date <span style="font-weight:400;color:var(--g400)">(optional — for multi-day events)</span></label>
+          <input type="date" class="fi" id="f-enddate"></div>
+        <div class="fg"><label class="fl">Location</label>
+          <input type="text" class="fi" id="f-location" placeholder="e.g. Perth WA, Online, Building B Room 204"></div>
+        <div class="fg"><label class="fl">Duration (hours) *</label>
+          <input type="number" class="fi" id="f-hours" placeholder="e.g. 8" min="0.5" step="0.5">
+          <div class="fe" id="e-hours">Please enter hours</div></div>
+        <div class="fg s2"><label class="fl">Description *</label>
+          <textarea class="fta" id="f-desc" placeholder="Describe the activity, your involvement, and what it covered…"></textarea>
+          <div class="fe" id="e-desc">Description is required</div></div>
+        <div class="fg s2"><label class="fl">Outcome / Impact <span style="font-weight:400;color:var(--g400)">(optional)</span></label>
+          <textarea class="fta" style="min-height:70px" id="f-outcome" placeholder="What did you learn or achieve?"></textarea></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-s" onclick="closeM('modal-act')">Cancel</button>
+      <button class="btn btn-p" onclick="saveActivity()">Save Activity</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="mo hidden" id="modal-view">
+  <div class="modal modal-lg">
+    <div class="mh">
+      <div><div class="mt" id="vw-title"></div><div id="vw-badges" style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"></div></div>
+      <button class="mc" onclick="closeM('modal-view')">✕</button>
+    </div>
+    <div class="mb" id="vw-body"></div>
+    <div class="mf" id="vw-footer"></div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="mo hidden" id="modal-confirm">
+  <div class="modal" style="max-width:400px">
+    <div class="mh"><div class="mt">Delete Activity</div><button class="mc" onclick="closeM('modal-confirm')">✕</button></div>
+    <div class="mb"><p style="font-size:14px;color:var(--g600);line-height:1.6" id="confirm-msg"></p></div>
+    <div class="mf">
+      <button class="btn btn-s" onclick="closeM('modal-confirm')">Cancel</button>
+      <button class="btn btn-d" id="confirm-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="mo hidden" id="modal-login">
+  <div class="modal" style="max-width:420px">
+    <div class="mh"><div class="mt">Login</div><button class="mc" onclick="closeM('modal-login')">✕</button></div>
+    <div class="mb">
+      <div style="font-size:13px;color:var(--g500);margin-bottom:16px">Use a demo account or sign in with a registered account.</div>
+      <div class="fg"><label class="fl">Email</label>
+        <input type="email" class="fi" id="login-username" placeholder="Enter email"></div>
+      <div class="fg"><label class="fl">Password</label>
+        <input type="password" class="fi" id="login-password" placeholder="Enter password"></div>
+      <div class="fe" id="login-error" style="display:none">Invalid username or password</div>
+      <div style="font-size:12px;color:var(--g400);margin-top:10px;line-height:1.6">Demo logins:<br><strong>admin@uni.edu</strong> / <strong>admin123</strong><br><strong>staff@uni.edu</strong> / <strong>staff123</strong></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-g" onclick="closeM('modal-login');openRegisterModal()">Register</button>
+      <button class="btn btn-s" onclick="closeM('modal-login')">Cancel</button>
+      <button class="btn btn-p" onclick="handleLogin()">Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER MODAL -->
+<div class="mo hidden" id="modal-register">
+  <div class="modal" style="max-width:460px">
+    <div class="mh"><div class="mt">Register</div><button class="mc" onclick="closeM('modal-register')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Full Name</label><input type="text" class="fi" id="register-name" placeholder="Enter full name"></div>
+      <div class="fg"><label class="fl">Email</label><input type="email" class="fi" id="register-email" placeholder="Enter email"></div>
+      <div class="fg"><label class="fl">Department</label><input type="text" class="fi" id="register-department" placeholder="Enter department"></div>
+      <div class="fg"><label class="fl">Job Title</label><input type="text" class="fi" id="register-job" placeholder="Enter job title"></div>
+      <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="register-password" placeholder="Create password"></div>
+      <div class="fe" id="register-error" style="display:none">Please complete all fields with a unique email.</div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-s" onclick="closeM('modal-register')">Cancel</button>
+      <button class="btn btn-p" onclick="handleRegister()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
