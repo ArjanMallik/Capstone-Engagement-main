@@ -1,3 +1,13 @@
+// Runtime error monitoring: surface errors as toasts so clicks failing due to JS errors are visible
+window.addEventListener('error', (e) => {
+  try{ toast('JavaScript error: ' + (e.message || e.toString()), 'error'); } catch(e){ /* toast may not be available yet */ }
+  console.error('Runtime error', e.error || e.message || e);
+});
+window.addEventListener('unhandledrejection', (ev) => {
+  try{ const msg = ev.reason && ev.reason.message ? ev.reason.message : String(ev.reason); toast('Unhandled rejection: ' + msg, 'error'); } catch(e){}
+  console.error('Unhandled rejection', ev.reason);
+});
+
 const TCOLORS={Conference:'#2563eb',Workshop:'#0d9488','Guest Lecture':'#7c3aed','Community Engagement':'#16a34a',Meeting:'#d97706','Industry Collaboration':'#db2777',Volunteering:'#0891b2',Other:'#64748b'};
 
 const DB={
@@ -733,9 +743,7 @@ async function testCustomSyncConnection(){
   }
 }
 
-async function testSyncConnection(){
-  await testCustomSyncConnection();
-}
+// (removed small wrapper testSyncConnection) use testCustomSyncConnection() directly where needed
 
 function renderAdmin(){
   if(!isAdmin())return;
@@ -782,74 +790,48 @@ document.addEventListener('click',(e)=>{
   }
 });
 
-async function syncToGoogleSheets(){
+async function syncToGoogleSheets(manual = false){
+  // manual: when true, show explicit toasts for success/failure regardless of auto-sync state
   const SCRIPT_URL = DB.get('googleScriptUrl');
-  if(!SCRIPT_URL){
-    console.log('No Google Apps Script URL configured, skipping sync');
-    return;
-  }
+  if(!SCRIPT_URL) return;
 
-  if (syncInProgress) {
-    console.log('Sync already in progress, skipping');
-    return;
-  }
+  if (syncInProgress) return;
 
-  // Check if online
-  if (!navigator.onLine) {
-    console.log('Offline, skipping sync');
-    return;
-  }
+  // Only attempt when online
+  if (!navigator.onLine) return;
 
   syncInProgress = true;
-
   try {
-    // Get activities to sync (exclude configured types/statuses)
     const activitiesToSync = DB.acts().filter(activity => {
       return !SYNC_CONFIG.excludeTypes.includes(activity.type) &&
              !SYNC_CONFIG.excludeStatuses.includes(activity.status || 'pending');
     });
 
-    if (activitiesToSync.length === 0) {
-      console.log('No activities to sync');
-      return;
-    }
+    if (activitiesToSync.length === 0) return;
 
-    console.log(`Syncing ${activitiesToSync.length} activities`);
-
-    // Send data with metadata to prevent overwrites
     const syncData = {
       activities: activitiesToSync,
       lastSyncTime: lastSyncTime,
-      clientId: 'ears-' + Date.now(), // Unique client identifier
-      action: 'sync' // Tell server this is a sync operation
+      clientId: 'ears-' + Date.now(),
+      action: 'sync'
     };
 
     const response = await fetch(SCRIPT_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(syncData)
     });
 
     if (response.ok) {
       lastSyncTime = nowIso();
       DB.set('lastSyncTime', lastSyncTime);
-      console.log('Sync successful');
-      // Only show toast for manual sync
-      if (!SYNC_CONFIG.autoSyncEnabled) {
-        toast('Data synced to Google Sheets','success');
-      }
+      if (manual || !SYNC_CONFIG.autoSyncEnabled) toast('Data synced to Google Sheets','success');
     } else {
       throw new Error(`Sync failed with status: ${response.status}`);
     }
-
   } catch (error) {
     console.error('Sync error:', error);
-    // Only show error toast for manual sync
-    if (!SYNC_CONFIG.autoSyncEnabled) {
-      toast('Sync failed','error');
-    }
+    if (manual || !SYNC_CONFIG.autoSyncEnabled) toast('Sync failed','error');
   } finally {
     syncInProgress = false;
   }
@@ -857,16 +839,135 @@ async function syncToGoogleSheets(){
 
 // Manual sync function (for button clicks)
 async function manualSyncToGoogleSheets(){
-  const originalAutoSync = SYNC_CONFIG.autoSyncEnabled;
-  SYNC_CONFIG.autoSyncEnabled = false; // Disable auto-sync toast
-  await syncToGoogleSheets();
-  SYNC_CONFIG.autoSyncEnabled = originalAutoSync; // Re-enable auto-sync
+  await syncToGoogleSheets(true);
 }
 
 // Download data from Google Sheets
 async function downloadFromGoogleSheets(){
   const SCRIPT_URL = DB.get('googleScriptUrl');
-  if(!SCRIPT_URL){\n    toast('No URL configured. Please enter your Google Apps Script URL first.','error');\n    return;\n  }\n  \n  try {\n    const response = await fetch(SCRIPT_URL, {\n      method: 'POST',\n      headers: {'Content-Type': 'application/json'},\n      body: JSON.stringify({action: 'download', timestamp: nowIso()})\n    });\n\n    if(!response.ok) throw new Error(`HTTP ${response.status}`);\n    \n    const data = await response.json();\n    \n    if(data.activities && Array.isArray(data.activities)){\n      const currentActivities = DB.acts();\n      const mergedActivities = [...currentActivities];\n      \n      data.activities.forEach(remoteActivity => {\n        const existingIndex = mergedActivities.findIndex(a => a.id === remoteActivity.id);\n        if(existingIndex >= 0){\n          // Update existing activity\n          mergedActivities[existingIndex] = {...mergedActivities[existingIndex], ...remoteActivity};\n        } else {\n          // Add new activity\n          mergedActivities.push(remoteActivity);\n        }\n      });\n      \n      DB.saveActs(mergedActivities);\n      lastSyncTime = nowIso();\n      DB.set('lastSyncTime', lastSyncTime);\n      toast(`✓ Downloaded ${data.activities.length} activities from Google Sheets!`,'success');\n      renderDash();\n      renderActivities();\n      renderTimeline();\n      renderAdmin();\n    } else {\n      throw new Error('Invalid data format from Google Sheets');\n    }\n  } catch(error) {\n    toast('Download failed: ' + error.message,'error');\n    console.error('Download error:', error);\n  }\n}\n\n// Export data as JSON file\nfunction exportDataAsJSON(){\n  const activities = DB.acts();\n  const users = DB.users();\n  const exportData = {\n    exportDate: nowIso(),\n    activities: activities,\n    users: users.map(u => ({...u, password: '***'})), // Don't export passwords\n    stats: {\n      totalActivities: activities.length,\n      totalHours: activities.reduce((s, a) => s + (a.hours || 0), 0),\n      totalUsers: users.length\n    }\n  };\n  \n  const dataStr = JSON.stringify(exportData, null, 2);\n  const blob = new Blob([dataStr], {type: 'application/json'});\n  const url = URL.createObjectURL(blob);\n  const link = document.createElement('a');\n  link.href = url;\n  link.download = `EARS_backup_${new Date().toISOString().split('T')[0]}.json`;\n  link.click();\n  URL.revokeObjectURL(url);\n  \n  toast('✓ Data exported successfully!','success');\n}\n\n// Import data from JSON file\nfunction importDataFromJSON(){\n  const input = document.createElement('input');\n  input.type = 'file';\n  input.accept = '.json';\n  input.onchange = async (e) => {\n    try {\n      const file = e.target.files[0];\n      if(!file) return;\n      \n      const text = await file.text();\n      const importData = JSON.parse(text);\n      \n      if(!importData.activities || !Array.isArray(importData.activities)){\n        throw new Error('Invalid JSON format: missing activities array');\n      }\n      \n      // Merge with existing data\n      const currentActivities = DB.acts();\n      const mergedActivities = [...currentActivities];\n      \n      importData.activities.forEach(importedActivity => {\n        const existingIndex = mergedActivities.findIndex(a => a.id === importedActivity.id);\n        if(existingIndex >= 0){\n          // Ask if user wants to update\n          if(confirm(`Activity \"${importedActivity.title}\" already exists. Overwrite it?`)){\n            mergedActivities[existingIndex] = importedActivity;\n          }\n        } else {\n          mergedActivities.push(importedActivity);\n        }\n      });\n      \n      DB.saveActs(mergedActivities);\n      toast(`✓ Imported ${importData.activities.length} activities!`,'success');\n      renderDash();\n      renderActivities();\n      renderTimeline();\n      renderAdmin();\n    } catch(error) {\n      toast('Import failed: ' + error.message,'error');\n      console.error('Import error:', error);\n    }\n  };\n  input.click();\n}\n\n// Start automatic sync
+  if(!SCRIPT_URL){
+    toast('No URL configured. Please enter your Google Apps Script URL first.','error');
+    return;
+  }
+
+  try {
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action: 'download', timestamp: nowIso()})
+    });
+
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data = await response.json();
+
+    if(data.activities && Array.isArray(data.activities)){
+      const currentActivities = DB.acts();
+      const mergedActivities = [...currentActivities];
+
+      data.activities.forEach(remoteActivity => {
+        const existingIndex = mergedActivities.findIndex(a => a.id === remoteActivity.id);
+        if(existingIndex >= 0){
+          // Update existing activity
+          mergedActivities[existingIndex] = {...mergedActivities[existingIndex], ...remoteActivity};
+        } else {
+          // Add new activity
+          mergedActivities.push(remoteActivity);
+        }
+      });
+
+      DB.saveActs(mergedActivities);
+      lastSyncTime = nowIso();
+      DB.set('lastSyncTime', lastSyncTime);
+      toast(`✓ Downloaded ${data.activities.length} activities from Google Sheets!`,'success');
+      renderDash();
+      renderActivities();
+      renderTimeline();
+      renderAdmin();
+    } else {
+      throw new Error('Invalid data format from Google Sheets');
+    }
+  } catch(error) {
+    toast('Download failed: ' + error.message,'error');
+    console.error('Download error:', error);
+  }
+}
+
+// Export data as JSON file
+function exportDataAsJSON(){
+  const activities = DB.acts();
+  const users = DB.users();
+  const exportData = {
+    exportDate: nowIso(),
+    activities: activities,
+    users: users.map(u => ({...u, password: '***'})), // Don't export passwords
+    stats: {
+      totalActivities: activities.length,
+      totalHours: activities.reduce((s, a) => s + (a.hours || 0), 0),
+      totalUsers: users.length
+    }
+  };
+
+  const dataStr = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([dataStr], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `EARS_backup_${new Date().toISOString().split('T')[0]}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+
+  toast('✓ Data exported successfully!','success');
+}
+
+// Import data from JSON file
+function importDataFromJSON(){
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = async (e) => {
+    try {
+      const file = e.target.files[0];
+      if(!file) return;
+      
+      const text = await file.text();
+      const importData = JSON.parse(text);
+      
+      if(!importData.activities || !Array.isArray(importData.activities)){
+        throw new Error('Invalid JSON format: missing activities array');
+      }
+      
+      // Merge with existing data
+      const currentActivities = DB.acts();
+      const mergedActivities = [...currentActivities];
+      
+      importData.activities.forEach(importedActivity => {
+        const existingIndex = mergedActivities.findIndex(a => a.id === importedActivity.id);
+        if(existingIndex >= 0){
+          // Ask if user wants to update
+          if(confirm(`Activity \"${importedActivity.title}\" already exists. Overwrite it?`)){
+            mergedActivities[existingIndex] = importedActivity;
+          }
+        } else {
+          mergedActivities.push(importedActivity);
+        }
+      });
+      
+      DB.saveActs(mergedActivities);
+      toast(`✓ Imported ${importData.activities.length} activities!`,'success');
+      renderDash();
+      renderActivities();
+      renderTimeline();
+      renderAdmin();
+    } catch(error) {
+      toast('Import failed: ' + error.message,'error');
+      console.error('Import error:', error);
+    }
+  };
+  input.click();
+}
+
+// Start automatic sync
 function startAutoSync(){
   if (!SYNC_CONFIG.autoSyncEnabled) return;
 
@@ -880,7 +981,6 @@ function startAutoSync(){
 
   // Sync when coming back online
   window.addEventListener('online', () => {
-    console.log('Back online, syncing...');
     setTimeout(() => syncToGoogleSheets(), 1000);
   });
 }
@@ -908,8 +1008,8 @@ function boot(){
   // Register service worker for offline functionality
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('./sw.js')
-      .then(registration => console.log('Service Worker registered'))
-      .catch(error => console.log('Service Worker registration failed:', error));
+      .then(() => {})
+      .catch(() => {});
   }
 }
 
